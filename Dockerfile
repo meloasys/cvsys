@@ -10,6 +10,9 @@ RUN apt-get update -y \
     ca-certificates \
     sudo \
     tzdata \
+    wget \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     python3 \
     python3-dev \
     python3-pip \
@@ -17,8 +20,8 @@ RUN apt-get update -y \
     python3-wheel \
     python3.10-venv
     
-
 RUN python3 -m pip install --upgrade pip
+RUN pip install pika
 
 ARG user_name=cvsys
 ARG user_id=1000
@@ -30,6 +33,8 @@ RUN chmod 0440 /etc/sudoers.d/${user_name}
 
 RUN sudo apt-get clean \
     && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN apt-get update -y
 
 USER ${user_name}
 WORKDIR /home/${user_name}
