@@ -22,7 +22,6 @@ RUN apt-get update -y \
     python3.10-venv
     
 RUN python3 -m pip install --upgrade pip
-RUN pip install pika
 
 ARG user_name=cvsys
 ARG user_id=1000

@@ -1,6 +1,5 @@
 # https://www.rabbitmq.com/tutorials/tutorial-one-python
 import pika, sys, os, yaml, functools, time, shutil
-from ultralytics import YOLO
 from pathlib import Path
 # sys.path.append('../models')
 
@@ -8,6 +7,7 @@ def on_msg_yolo(cfg, ch, method, properties, body):
     print(f" [x] Received {body}")
     source = cfg['img_source'] # To do
     save_dir = Path(cfg['ultralytics_save_root']) / str(int(time.time()))
+    os.makedirs(save_dir, exist_ok=True)
     model = YOLO(cfg['ultralytics_chkpoint_source'])
     inf_res = model.predict(source,
                             save_dir=save_dir,
@@ -48,6 +48,17 @@ if __name__ == '__main__':
         dir = 'config.yaml'
         with open(dir) as f:
             config = yaml.load(f,Loader=yaml.FullLoader)
+        dir = 'src/ultralytics/ultralytics/cfg/default.yaml'
+        dir2 = 'src/ultralytics/ultralytics/cfg/default-original.yaml'
+        if not os.path.exists(dir2):
+            shutil.copyfile(dir, dir2)
+        with open(dir) as f:
+            model_cfg = yaml.load(f,Loader=yaml.FullLoader)
+        if list(model_cfg.keys())[-1] != 'save_dir':
+            with open(dir, 'w') as f:
+                model_cfg['save_dir'] = None
+                yaml.dump(model_cfg, f)
+        from ultralytics import YOLO
         main(config)
     except KeyboardInterrupt:
         print('Interrupted')
