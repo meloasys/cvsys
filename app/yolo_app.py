@@ -1,35 +1,28 @@
 # https://www.rabbitmq.com/tutorials/tutorial-one-python
-import pika, sys, os, yaml, functools, time
+import pika, sys, os, yaml, functools, time, shutil
 from ultralytics import YOLO
 from pathlib import Path
-sys.path.append('../models')
+# sys.path.append('../models')
 
 def on_msg_yolo(cfg, ch, method, properties, body):
     print(f" [x] Received {body}")
-    # To do ##############################################
-    source = cfg['sample_img'] # To do
-
-
-
-    ######################################################
-    save_dir = Path(cfg['save_root']) / str(time.time())
-    model = YOLO(cfg['ultralytics_model_source'])
+    source = cfg['img_source'] # To do
+    save_dir = Path(cfg['ultralytics_save_root']) / str(int(time.time()))
+    model = YOLO(cfg['ultralytics_chkpoint_source'])
     inf_res = model.predict(source,
                             save_dir=save_dir,
                             save=True, imgsz=640, conf=0.5)
-    # To do ##############################################
-    publish_body = 'do your thg'
-
-
-
-
-    ######################################################
-    ch.basic_publish(exchange='', 
-                     routing_key=cfg['ultralytics_pubs_name'], 
-                     body=publish_body)
-    print(" [x] Published inference result message! ")
+    os.makedirs(Path(cfg['save_dir']), exist_ok=True)
+    backup_from = save_dir / os.path.split(source)[-1]
+    backup_to = Path(cfg['save_dir']) / os.path.split(source)[-1]
+    shutil.copyfile(backup_from, backup_to)
+    ################# pub mesg #################
+    # publish_body = 'do your thg'
+    # ch.basic_publish(exchange='', 
+    #                  routing_key=cfg['ultralytics_pubs_name'], 
+    #                  body=publish_body)
+    # print(" [x] Published inference result message! ")
     # ch.close()
-
 
 def main(cfg):
     credentials = pika.PlainCredentials(
@@ -44,7 +37,7 @@ def main(cfg):
                                     )
     channel = connection.channel()
     channel.queue_declare(queue=cfg['ultralytics_cons_name'])
-    channel.queue_declare(queue=cfg['ultralytics_pubs_name'])
+    # channel.queue_declare(queue=cfg['ultralytics_pubs_name'])
     callback_fn = functools.partial(on_msg_yolo, cfg)
     channel.basic_consume(queue=cfg['ultralytics_cons_name'], on_message_callback=callback_fn, auto_ack=True)
     print(' [*] Waiting for messages. To exit press CTRL+C')

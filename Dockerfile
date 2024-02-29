@@ -1,3 +1,4 @@
+# ref: https://booiljung.github.io/technical_articles/docker/dockerfile_pattern.html
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
